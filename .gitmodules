@@ -1,0 +1,3 @@
+[submodule "renderjack"]
+	path = renderjack
+	url = https://github.com/Nyrox/renderjack.git
