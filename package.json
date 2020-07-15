@@ -11,12 +11,22 @@
     "start": "webpack-dev-server"
   },
   "dependencies": {
-    "renderjack": "file:./renderjack/wasm/pkg"
+    "@types/react": "^16.9.43",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
+    "react-monaco-editor": "^0.39.0",
+    "renderjack-wasm": "file:./renderjack-wasm/pkg"
   },
   "devDependencies": {
+    "copy-webpack-plugin": "^5.0.0",
+    "css-loader": "^3.6.0",
+    "file-loader": "^6.0.0",
+    "monaco-editor-webpack-plugin": "^1.9.0",
+    "style-loader": "^1.2.1",
+    "ts-loader": "^8.0.0",
+    "typescript": "^3.9.6",
     "webpack": "^4.29.3",
     "webpack-cli": "^3.1.0",
-    "webpack-dev-server": "^3.1.5",
-    "copy-webpack-plugin": "^5.0.0"
+    "webpack-dev-server": "^3.1.5"
   }
 }
