@@ -52,6 +52,7 @@ const App = () => {
 		function resizeImage() {
 			canvas.width = (img.current as HTMLImageElement).clientWidth
 			canvas.height = (img.current as HTMLImageElement).clientWidth * (9.0 / 16.0);
+			console.log("Recreating framebuffers", canvas.width, canvas.height)
 		}
 
 		window.onresize = resizeImage
@@ -60,14 +61,19 @@ const App = () => {
 
 	const [code, setCode] = React.useState(`
 
+in Float ux
+in Float uy
+
 Vec3 main() {
-	return Vec3(1.0, 0.0, 0.0)
+	return Vec3(ux, uy, 1.0)
 }
 `	);
 
 	const render = () => {
-		let data = wasm.shade_window_space(dims[0], dims[1], code);
-		let iData = new ImageData(data, dims[0], dims[1])
+		console.log("Queueing render", canvas.width, canvas.height)
+		
+		let data = wasm.shade_window_space(canvas.width, canvas.height, code);
+		let iData = new ImageData(data, canvas.width, canvas.height)
 		context.putImageData(iData, 0, 0);
 		setImgUri(canvas.toDataURL())
 	}

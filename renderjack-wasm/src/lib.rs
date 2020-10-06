@@ -29,21 +29,24 @@ pub fn greet() {
 #[wasm_bindgen]
 pub fn shade_window_space(width: usize, height: usize, shader: String) -> wasm_bindgen::Clamped<Vec<u8>> {
     let mut program = motokigo::parser::parse(&shader);
-    let mut program_data = &mut motokigo::compiler::program_data::ProgramData::new();
+    let mut program_data = motokigo::compiler::program_data::ProgramData::new();
     motokigo::compiler::resolve_types::resolve(&mut program, &mut program_data).unwrap();
-    let compiled = motokigo::compiler::compile(program);
+    let compiled =  motokigo::compiler::codegen(program, program_data);
 
     let mut shadelang_vm = motokigo::vm::VirtualMachine::new(&compiled);
 
     let mut image_data = vec![0; width * height * 4];
 
-    log(&format!("{:?}", program_data));
+    log(&format!("{:?}", compiled.data.clone()));
 
     use motokigo::vm::*;
 
     for y in 0..height {
         for x in 0..width {
-            let vm = shadelang_vm.clone();
+            let mut vm = shadelang_vm.clone();
+
+            vm.set_global("ux", x as f32 / width as f32);
+            vm.set_global("uy", y as f32 / height as f32);
 
             let mut vm = match vm.run_fn("main", vec![]) {
                 VMState::VMRunFinished(s) => s.reset(),
@@ -54,7 +57,7 @@ pub fn shade_window_space(width: usize, height: usize, shader: String) -> wasm_b
             };
 
             let color: [f32; 3] = unsafe { vm.pop_stack() };
-            let i_base = (x + y * height) * 4;
+            let i_base = (x + y * width) * 4;
 
             image_data[i_base + 0] = (color[0] * 255.0) as u8;
             image_data[i_base + 1] = (color[1] * 255.0) as u8;
