@@ -14,12 +14,16 @@ import MonacoEditor from 'react-monaco-editor/lib/editor'
 import * as monaco from "monaco-editor"
 
 const EditorPanel = ({code, onChange, onSaveFile}) => {
+	useEffect(() => {
+		window.addEventListener("motoki-render", onSaveFile)
+		return () => window.removeEventListener("motoki-render", onSaveFile)
+	})
 
 	const onMount = e => {
 		console.log("mounted editor")
 		e.focus()
 		e.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
-			onSaveFile()
+			window.dispatchEvent(new CustomEvent("motoki-render"))
 		})
 	}
 
@@ -71,11 +75,11 @@ Vec3 main() {
 
 	const render = () => {
 		console.log("Queueing render", canvas.width, canvas.height)
-		
 		let data = wasm.shade_window_space(canvas.width, canvas.height, code);
 		let iData = new ImageData(data, canvas.width, canvas.height)
 		context.putImageData(iData, 0, 0);
 		setImgUri(canvas.toDataURL())
+
 	}
 
 	return <>
