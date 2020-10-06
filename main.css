@@ -12,3 +12,17 @@ html, body {
     display: flex;
     height: 100%;
 }
+
+.image-container {
+    width: 50%;
+    background: #333;
+}
+
+.image-container > img {
+    width: 100%;
+    background: #FFF;
+}
+
+.editor-panel {
+    width: 50%;
+}
