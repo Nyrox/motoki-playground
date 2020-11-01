@@ -6,6 +6,7 @@
       "allowJs": true,
       "sourceMap": true,
       "allowSyntheticDefaultImports": true,
-      "moduleResolution": "node"
+      "moduleResolution": "node",
+      "module": "ESNext"
     }
   }

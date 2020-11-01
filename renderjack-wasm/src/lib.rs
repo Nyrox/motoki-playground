@@ -3,7 +3,6 @@ mod utils;
 use wasm_bindgen::prelude::*;
 
 use motokigo;
-use renderjack;
 
 // When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
 // allocator.
@@ -25,10 +24,70 @@ pub fn greet() {
 }
 
 
+#[wasm_bindgen]
+#[derive(Clone)]
+pub struct ShaderCompilationResult {
+    pub has_error: bool,
+    errors: Vec<String>,
+    warnings: Vec<String>,
+}
+
+
+use motokigo::parser::ParsingError;
+use motokigo::scanner::ScanningError;
+
+#[wasm_bindgen]
+pub fn check_shader_compilation(shader: String) -> ShaderCompilationResult {
+    let mut program = match motokigo::parser::parse(&shader) {
+        Ok(p) => p,
+        Err(e) => {
+            let error_msg = match e {
+                ParsingError::UnexpectedEndOfInput => "Encountered error while parsing: Unexpected end of file".to_owned(),
+                ParsingError::UnexpectedToken(t) => format!("Encountered error while parsing: Unexpected token {:?} at {}:{}", t.item, t.from.line, t.from.offset.unwrap()),
+                ParsingError::ScanningError(e) => match e {
+                    ScanningError::UnexpectedEndOfFile => format!("Encountered error while scanning: Unexpected end of file"),
+                    ScanningError::UnexpectedCharacter(c) => format!("Encountered error while scanning: Unexpected character {} at {}:{}", c.item, c.from.line, c.from.offset.unwrap()),
+                    ScanningError::InvalidLiteral(l) => format!("Encountered error while scanning: Invalid literal at {}:{}", l.from.line, l.from.offset.unwrap())
+                }
+            };
+
+            return ShaderCompilationResult {
+                has_error: true,
+                errors: vec![error_msg],
+                warnings: vec![],
+            }
+        }
+    };
+
+    let mut program_data = motokigo::compiler::program_data::ProgramData::new();
+    match motokigo::compiler::resolve_types::resolve(&mut program, &mut program_data) {
+        Ok(_) => {
+            return ShaderCompilationResult {
+                has_error: false,
+                errors: vec![],
+                warnings: vec![],
+            }
+        },
+        Err(t) => {
+            return ShaderCompilationResult {
+                has_error: true,
+                errors: vec![format!("{}", t)],
+                warnings: vec![]
+            }
+        }
+    }
+}
+
+#[wasm_bindgen]
+pub fn shader_compilation_output_errors(result: ShaderCompilationResult) -> String {
+    result.errors[0].clone()
+}
+
+
 
 #[wasm_bindgen]
 pub fn shade_window_space(width: usize, height: usize, shader: String) -> wasm_bindgen::Clamped<Vec<u8>> {
-    let mut program = motokigo::parser::parse(&shader);
+    let mut program = motokigo::parser::parse(&shader).unwrap();
     let mut program_data = motokigo::compiler::program_data::ProgramData::new();
     motokigo::compiler::resolve_types::resolve(&mut program, &mut program_data).unwrap();
     let compiled =  motokigo::compiler::codegen(program, program_data);

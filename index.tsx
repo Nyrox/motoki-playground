@@ -5,7 +5,33 @@ import * as wasm from "renderjack-wasm";
 const dims = [800, 600]
 
 
+import MotokiWorker, { Message, Notification, RequestShaderCompilationMessage } from "./motoki.worker"
 
+class Worker {
+	worker: typeof MotokiWorker // any
+	constructor() { this.worker = new MotokiWorker() }
+
+	postMessage(message: Message) {
+		this.worker.postMessage(message)
+	}
+
+	addListener(listener: (Notifcation) => void) {
+		this.worker.addEventListener("message", listener)
+	}
+
+	removeListener(listener: (Notification) => void) {
+		this.worker.removeEventListener("message", listener)
+	}
+}
+
+export function createRequestShaderCompilationMessage(source: string): RequestShaderCompilationMessage {
+    return {
+        messageType: "request_shader_compilation",
+        shaderSource: source
+    }
+}
+
+const worker = new Worker()
 
 
 import React, { useEffect, useLayoutEffect } from 'react'
@@ -49,10 +75,41 @@ const App = () => {
 
 	let [canvas, context] = _gfx as [HTMLCanvasElement, CanvasRenderingContext2D]
 	let [imgUri, setImgUri] = React.useState(() => canvas.toDataURL());
+	let [compileOutput, setCompileOutput] = React.useState([])
+	let [generatedGLSL, setGeneratedGLSL] = React.useState("")
 
 	let img = React.useRef()
 
-	useLayoutEffect(() => {
+	useEffect(() => {
+		function listener(message) {
+			console.log("Received worker notification", message.data)
+			let notification: Notification = message.data
+			switch (notification.notificationType) {
+				case "shader_compilation_result":
+					let output = []
+					notification.warnings.forEach(warning => {
+						output.push(<li className="warning">{warning}</li>)
+					});
+					notification.errors.forEach(error => {
+						output.push(<li className="error">{error}</li>)
+					});
+
+					console.log(output)
+					setCompileOutput(output)
+
+					if (notification.errors.length == 0) {
+						setGeneratedGLSL(notification.glsl)
+					}
+				break;
+			}
+		}
+
+		worker.addListener(listener)
+
+		return () => worker.removeListener(listener)
+	})
+
+	useEffect(() => {
 		function resizeImage() {
 			canvas.width = (img.current as HTMLImageElement).clientWidth
 			canvas.height = (img.current as HTMLImageElement).clientWidth * (9.0 / 16.0);
@@ -61,7 +118,7 @@ const App = () => {
 
 		window.onresize = resizeImage
 		resizeImage()
-	})
+	}, [false])
 
 	const [code, setCode] = React.useState(`
 
@@ -74,6 +131,7 @@ Vec3 main() {
 `	);
 
 	const render = () => {
+		worker.postMessage(createRequestShaderCompilationMessage(code))
 		console.log("Queueing render", canvas.width, canvas.height)
 		let data = wasm.shade_window_space(canvas.width, canvas.height, code);
 		let iData = new ImageData(data, canvas.width, canvas.height)
@@ -82,10 +140,16 @@ Vec3 main() {
 
 	}
 
+	console.log(compileOutput)
+
 	return <>
-		<div className="image-container">
-			<img ref={img} src={imgUri} />
-			<button onClick={render}>Render</button>
+		<div className="left-panel">
+			<div className="image-container">
+				<img ref={img} src={imgUri} />
+			</div>
+			<div className="output-container">
+				{compileOutput}
+			</div>
 		</div>
 		<EditorPanel code={code} onChange={setCode} onSaveFile={render} />
 	</>
