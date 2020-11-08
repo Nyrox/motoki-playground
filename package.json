@@ -16,7 +16,7 @@
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "react-monaco-editor": "^0.40.0",
-    "renderjack-wasm": "file:./renderjack-wasm/pkg"
+    "motokigo-wasm": "file:./motokigo-wasm/pkg"
   },
   "devDependencies": {
     "copy-webpack-plugin": "^5.0.0",

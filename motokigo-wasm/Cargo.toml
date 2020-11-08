@@ -1,5 +1,5 @@
 [package]
-name = "renderjack-wasm"
+name = "motokigo-wasm"
 version = "0.1.0"
 authors = ["Nyrox <root@nyrox.tech>"]
 edition = "2018"
@@ -11,7 +11,7 @@ crate-type = ["cdylib", "rlib"]
 default = ["console_error_panic_hook"]
 
 [dependencies]
-motokigo={path="../renderjack/motokigo"}
+motokigo={path="../motokigo"}
 
 wasm-bindgen = "0.2.63"
 

@@ -1,4 +1,4 @@
-import { ShaderCompilationResult } from "renderjack-wasm";
+import { ShaderCompilationResult } from "motokigo-wasm";
 
 const ctx: Worker = self as any;
 
@@ -6,7 +6,7 @@ const postMessage = (msg: Notification) => {
     ctx.postMessage(msg)
 }
 
-import("renderjack-wasm").then(wasm => {
+import("motokigo-wasm").then(wasm => {
     wasm.greet()
     
     ctx.addEventListener("message", event => {

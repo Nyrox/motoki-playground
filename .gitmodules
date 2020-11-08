@@ -2,3 +2,4 @@
 [submodule "motokigo"]
 	path = motokigo
 	ulrl = https://github.com/Nyrox/motokigo.git
+	url = https://github.com/Nyrox/motokigo

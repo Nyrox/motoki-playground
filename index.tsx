@@ -1,6 +1,6 @@
 import "./main.css"
 
-import * as wasm from "renderjack-wasm";
+import * as wasm from "motokigo-wasm";
 
 const dims = [800, 600]
 
