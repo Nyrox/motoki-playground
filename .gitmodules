@@ -1,3 +1,4 @@
-[submodule "renderjack"]
-	path = renderjack
-	url = https://github.com/Nyrox/renderjack.git
+
+[submodule "motokigo"]
+	path = motokigo
+	ulrl = https://github.com/Nyrox/motokigo.git
