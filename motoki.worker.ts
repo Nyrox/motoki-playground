@@ -19,12 +19,14 @@ import("motokigo-wasm").then(wasm => {
                 console.log("Received request for shader compilation")
                 console.log(message.shaderSource)
                 let result = wasm.check_shader_compilation(message.shaderSource)
-
-                let errors = [wasm.shader_compilation_output_errors(result)]
-
+                
+                let errors = [];
+                if (result.has_error) {
+                    errors = [wasm.shader_compilation_output_errors(result)]
+                }
                 console.log(errors)
 
-                let response = createShaderCompilationResultNotification(errors, [], "empty string lol")
+                let response = createShaderCompilationResultNotification(errors, [], wasm.shader_compilation_output_glsl(result))
                 postMessage(response)
             break;
         }

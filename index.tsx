@@ -39,7 +39,16 @@ import { render } from 'react-dom'
 import MonacoEditor from 'react-monaco-editor/lib/editor'
 import * as monaco from "monaco-editor"
 
-const EditorPanel = ({code, onChange, onSaveFile}) => {
+
+const TabBar = ({activeTab, onSwitch}) => {
+
+	return <div className="tab-bar">
+		<button className={"tab " + (activeTab == "frag" ? "active" : "")} onClick={() => onSwitch("frag")}>Fragment Shader</button>
+		<button className={"tab " + (activeTab == "glsl" ? "active" : "")} onClick={() => onSwitch("glsl")}>GlSL</button>
+	</div>
+}
+
+const EditorPanel = ({code, onChange, onSaveFile, activeTab, onTabSwitch}) => {
 	useEffect(() => {
 		window.addEventListener("motoki-render", onSaveFile)
 		return () => window.removeEventListener("motoki-render", onSaveFile)
@@ -54,7 +63,7 @@ const EditorPanel = ({code, onChange, onSaveFile}) => {
 	}
 
 	return <div className="editor-panel">
-
+		<TabBar onSwitch={onTabSwitch} activeTab={activeTab} />
 		<MonacoEditor
 			language=""
 			theme="vs-dark"
@@ -77,6 +86,7 @@ const App = () => {
 	let [imgUri, setImgUri] = React.useState(() => canvas.toDataURL());
 	let [compileOutput, setCompileOutput] = React.useState([])
 	let [generatedGLSL, setGeneratedGLSL] = React.useState("")
+	let [activeTab, setActiveTab] = React.useState("frag")
 
 	let img = React.useRef()
 
@@ -151,7 +161,9 @@ Vec3 main() {
 				{compileOutput}
 			</div>
 		</div>
-		<EditorPanel code={code} onChange={setCode} onSaveFile={render} />
+		{(activeTab == "frag" ? 
+			<EditorPanel activeTab={activeTab} code={code} onChange={setCode} onSaveFile={render}  onTabSwitch={setActiveTab} />
+			: <EditorPanel activeTab={activeTab} code={generatedGLSL} onTabSwitch={setActiveTab} onChange={() => {}} onSaveFile={() => {}} />)}
 	</>
 }
 

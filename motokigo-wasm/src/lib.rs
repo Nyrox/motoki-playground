@@ -11,7 +11,7 @@ use motokigo;
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
 #[wasm_bindgen]
-extern {
+extern "C" {
     fn alert(s: &str);
 
     #[wasm_bindgen(js_namespace=console)]
@@ -23,21 +23,21 @@ pub fn greet() {
     log("hello console");
 }
 
-
 #[wasm_bindgen]
-#[derive(Clone)]
+#[derive(Debug)]
 pub struct ShaderCompilationResult {
     pub has_error: bool,
+    glsl: String,
     errors: Vec<String>,
     warnings: Vec<String>,
 }
-
 
 use motokigo::parser::ParsingError;
 use motokigo::scanner::ScanningError;
 
 #[wasm_bindgen]
 pub fn check_shader_compilation(shader: String) -> ShaderCompilationResult {
+    #[rustfmt::skip]
     let mut program = match motokigo::parser::parse(&shader) {
         Ok(p) => p,
         Err(e) => {
@@ -55,26 +55,26 @@ pub fn check_shader_compilation(shader: String) -> ShaderCompilationResult {
                 has_error: true,
                 errors: vec![error_msg],
                 warnings: vec![],
+                glsl: String::new(),
             }
         }
     };
 
     let mut program_data = motokigo::compiler::program_data::ProgramData::new();
-    match motokigo::compiler::resolve_types::resolve(&mut program, &mut program_data) {
-        Ok(_) => {
-            return ShaderCompilationResult {
-                has_error: false,
-                errors: vec![],
-                warnings: vec![],
-            }
-        },
-        Err(t) => {
-            return ShaderCompilationResult {
-                has_error: true,
-                errors: vec![format!("{}", t)],
-                warnings: vec![]
-            }
-        }
+    if let Err(t) = motokigo::compiler::resolve_types::resolve(&mut program, &mut program_data) {
+        return ShaderCompilationResult {
+            has_error: true,
+            errors: vec![format!("{}", t)],
+            warnings: vec![],
+            glsl: String::new(),
+        };
+    }
+
+    return ShaderCompilationResult {
+        has_error: false,
+        errors: vec![],
+        warnings: vec![],
+        glsl: motokigo::glsl::generate_glsl(program),
     }
 }
 
@@ -83,14 +83,21 @@ pub fn shader_compilation_output_errors(result: ShaderCompilationResult) -> Stri
     result.errors[0].clone()
 }
 
-
+#[wasm_bindgen]
+pub fn shader_compilation_output_glsl(result: ShaderCompilationResult) -> String {
+    result.glsl
+}
 
 #[wasm_bindgen]
-pub fn shade_window_space(width: usize, height: usize, shader: String) -> wasm_bindgen::Clamped<Vec<u8>> {
+pub fn shade_window_space(
+    width: usize,
+    height: usize,
+    shader: String,
+) -> wasm_bindgen::Clamped<Vec<u8>> {
     let mut program = motokigo::parser::parse(&shader).unwrap();
     let mut program_data = motokigo::compiler::program_data::ProgramData::new();
     motokigo::compiler::resolve_types::resolve(&mut program, &mut program_data).unwrap();
-    let compiled =  motokigo::compiler::codegen(program, program_data);
+    let compiled = motokigo::compiler::codegen(program, program_data);
 
     let mut shadelang_vm = motokigo::vm::VirtualMachine::new(&compiled);
 
@@ -122,7 +129,6 @@ pub fn shade_window_space(width: usize, height: usize, shader: String) -> wasm_b
             image_data[i_base + 1] = (color[1] * 255.0) as u8;
             image_data[i_base + 2] = (color[2] * 255.0) as u8;
             image_data[i_base + 3] = 255;
-
         }
     }
 

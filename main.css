@@ -20,7 +20,7 @@ html, body {
     flex-direction: column;
     
     width: 50%;
-    background: #333;
+    background: #252525;
 }
 
 .left-panel > * {
@@ -50,4 +50,21 @@ html, body {
 
 .editor-panel {
     width: 50%;
+}
+
+.tab-bar {
+    background: #252525;
+}
+
+.tab-bar button {
+    background: none;
+    color: white;
+    opacity: 0.8;
+    border: 0;
+    padding: 4px 16px 4px 8px;
+    font-family: monospace;
+}
+
+.tab-bar button.active {
+    border-bottom: 1px solid cyan;
 }
