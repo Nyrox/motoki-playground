@@ -1,4 +1,4 @@
-import "./main.css"
+import "./css/main.css"
 
 import * as wasm from "motokigo-wasm";
 
@@ -25,10 +25,10 @@ class Worker {
 }
 
 export function createRequestShaderCompilationMessage(source: string): RequestShaderCompilationMessage {
-    return {
-        messageType: "request_shader_compilation",
-        shaderSource: source
-    }
+	return {
+		messageType: "request_shader_compilation",
+		shaderSource: source
+	}
 }
 
 const worker = new Worker()
@@ -40,7 +40,7 @@ import MonacoEditor from 'react-monaco-editor/lib/editor'
 import * as monaco from "monaco-editor"
 
 
-const TabBar = ({activeTab, onSwitch}) => {
+const TabBar = ({ activeTab, onSwitch }) => {
 
 	return <div className="tab-bar">
 		<button className={"tab " + (activeTab == "frag" ? "active" : "")} onClick={() => onSwitch("frag")}>Fragment Shader</button>
@@ -48,7 +48,7 @@ const TabBar = ({activeTab, onSwitch}) => {
 	</div>
 }
 
-const EditorPanel = ({code, onChange, onSaveFile, activeTab, onTabSwitch}) => {
+const EditorPanel = ({ code, onChange, onSaveFile, activeTab, onTabSwitch }) => {
 	useEffect(() => {
 		window.addEventListener("motoki-render", onSaveFile)
 		return () => window.removeEventListener("motoki-render", onSaveFile)
@@ -75,20 +75,22 @@ const EditorPanel = ({code, onChange, onSaveFile, activeTab, onTabSwitch}) => {
 	</div>
 }
 
-const App = () => {
-	let [_gfx, _] = React.useState(() => {
-		let c = document.createElement("canvas") as HTMLCanvasElement
-		let ctx = c.getContext("2d")
-		return [c, ctx]
-	})
+import * as GL from "./gl"
 
-	let [canvas, context] = _gfx as [HTMLCanvasElement, CanvasRenderingContext2D]
-	let [imgUri, setImgUri] = React.useState(() => canvas.toDataURL());
+const App = () => {
+	let canvasRef = React.useRef()
+	let frameTimerRef = React.useRef()
+
+	let [gl, setGl]= React.useState(null);
+
+	useEffect(() => {
+		setGl ((canvasRef.current as HTMLCanvasElement).getContext("webgl2"))
+	}, [false])
+
 	let [compileOutput, setCompileOutput] = React.useState([])
 	let [generatedGLSL, setGeneratedGLSL] = React.useState("")
 	let [activeTab, setActiveTab] = React.useState("frag")
 
-	let img = React.useRef()
 
 	useEffect(() => {
 		function listener(message) {
@@ -108,9 +110,9 @@ const App = () => {
 					setCompileOutput(output)
 
 					if (notification.errors.length == 0) {
-						setGeneratedGLSL(notification.glsl)
+						setGeneratedGLSL(notification.glsl)						
 					}
-				break;
+					break;
 			}
 		}
 
@@ -120,50 +122,100 @@ const App = () => {
 	})
 
 	useEffect(() => {
+		if (generatedGLSL == "") return;
+		let glData = GL.createData(gl, generatedGLSL)
+		
+		let canvas = canvasRef.current as HTMLCanvasElement
+		let frameCount = 0
+		let handle;
+		handle = requestAnimationFrame(function frame() {
+			frameCount += 1;
+			(frameTimerRef.current as HTMLElement).innerText = handle
+			gl.viewport(0, 0, canvas.width, canvas.height)
+			GL.draw(gl, glData, frameCount)
+			handle = requestAnimationFrame(frame)
+		})
+
+		return () => {
+			cancelAnimationFrame(handle)
+		}
+	}, [generatedGLSL])
+
+	useEffect(() => {
+		if (canvasRef.current === undefined) return
 		function resizeImage() {
-			canvas.width = (img.current as HTMLImageElement).clientWidth
-			canvas.height = (img.current as HTMLImageElement).clientWidth * (9.0 / 16.0);
+			let canvas = canvasRef.current as HTMLCanvasElement
+			canvas.width = (canvas).clientWidth
+			canvas.height = (canvas).clientWidth * (9.0 / 16.0);
 			console.log("Recreating framebuffers", canvas.width, canvas.height)
 		}
 
 		window.onresize = resizeImage
 		resizeImage()
-	}, [false])
+	}, [canvasRef])
 
 	const [code, setCode] = React.useState(`
-
 in Float ux
 in Float uy
+	
+Vec2 square_complex(Vec2 z){
+	return Vec2(
+		elem(z,0)*elem(z,0) - elem(z,1)*elem(z,1),
+		elem(z,0)*elem(z,1) + elem(z,1)*elem(z,0)
+	)
+}
+	
+Float square_length(Vec2 a) {
+	return elem(a,0)*elem(a,0) + elem(a,1)*elem(a,1)
+}
+	
+Vec4 main() {
+	let max_steps = 5
 
-Vec3 main() {
-	return Vec3(ux, uy, 1.0)
+	let uv = Vec2(-2.5 + (1.0 - (-2.5)) * ux, -1.0 + (1.0 - (-1.0)) * uy)
+	let mut z = uv
+	
+	let mut steps = 0
+
+	for i=0 to max_steps {
+		if square_length(z) < 4.0 { 
+			z = square_complex(z) + uv
+			steps = steps + 1
+		}
+	}
+	
+	if (steps == max_steps) {
+		return Vec4(1.0, 0.0, 0.0, 1.0)
+	}
+
+	return Vec4(float(steps) / 15.0, 0.0, 0.0, 1.0)
 }
 `	);
 
 	const render = () => {
 		worker.postMessage(createRequestShaderCompilationMessage(code))
-		console.log("Queueing render", canvas.width, canvas.height)
-		let data = wasm.shade_window_space(canvas.width, canvas.height, code);
-		let iData = new ImageData(data, canvas.width, canvas.height)
-		context.putImageData(iData, 0, 0);
-		setImgUri(canvas.toDataURL())
-
+		// let data = wasm.shade_window_space(canvas.width, canvas.height, code);
+		// let iData = new ImageData(data, canvas.width, canvas.height)
+		// context.putImageData(iData, 0, 0);
+		// setImgUri(canvas.toDataURL())
 	}
 
-	console.log(compileOutput)
 
 	return <>
 		<div className="left-panel">
 			<div className="image-container">
-				<img ref={img} src={imgUri} />
+				<canvas ref={canvasRef} />
+				<div className="toolbar">
+					<span className="frame-timer" ref={frameTimerRef}>1</span>
+				</div>
 			</div>
 			<div className="output-container">
 				{compileOutput}
 			</div>
 		</div>
-		{(activeTab == "frag" ? 
-			<EditorPanel activeTab={activeTab} code={code} onChange={setCode} onSaveFile={render}  onTabSwitch={setActiveTab} />
-			: <EditorPanel activeTab={activeTab} code={generatedGLSL} onTabSwitch={setActiveTab} onChange={() => {}} onSaveFile={() => {}} />)}
+		{(activeTab == "frag" ?
+			<EditorPanel activeTab={activeTab} code={code} onChange={setCode} onSaveFile={render} onTabSwitch={setActiveTab} />
+			: <EditorPanel activeTab={activeTab} code={generatedGLSL} onTabSwitch={setActiveTab} onChange={() => { }} onSaveFile={() => { }} />)}
 	</>
 }
 

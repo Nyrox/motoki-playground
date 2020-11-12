@@ -4,14 +4,14 @@ const MonacoWebpackPlugin = require("monaco-editor-webpack-plugin");
 const path = require('path');
 
 module.exports = {
-  entry: "./bootstrap.js",
+  entry: "./source/bootstrap.js",
   output: {
     path: path.resolve(__dirname, "dist"),
     filename: "bootstrap.js",
   },
   mode: "development",
   plugins: [
-    new CopyWebpackPlugin(['index.html', 'main.css']),
+    new CopyWebpackPlugin(['source/index.html', 'source/css/main.css']),
     new MonacoWebpackPlugin({
       languages: []
     })

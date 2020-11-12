@@ -35,6 +35,10 @@ html, body {
     font-family: monospace;
 }
 
+canvas {
+    width: 100%;
+}
+
 
 .output-container .error::before {
     content: "ERROR";
