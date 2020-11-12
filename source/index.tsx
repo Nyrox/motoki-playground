@@ -157,23 +157,25 @@ const App = () => {
 	const [code, setCode] = React.useState(`
 in Float ux
 in Float uy
-	
+
+uniform Int iTime
+
 Vec2 square_complex(Vec2 z){
 	return Vec2(
 		elem(z,0)*elem(z,0) - elem(z,1)*elem(z,1),
 		elem(z,0)*elem(z,1) + elem(z,1)*elem(z,0)
 	)
 }
-	
+
 Float square_length(Vec2 a) {
 	return elem(a,0)*elem(a,0) + elem(a,1)*elem(a,1)
 }
-	
+
 Vec4 main() {
-	let max_steps = 5
+	let max_steps = 20
 
 	let uv = Vec2(-2.5 + (1.0 - (-2.5)) * ux, -1.0 + (1.0 - (-1.0)) * uy)
-	let mut z = uv
+	let mut z = uv / (float(iTime) / 50.0)
 	
 	let mut steps = 0
 
