@@ -155,6 +155,7 @@ const App = () => {
 	}, [canvasRef])
 
 	const [code, setCode] = React.useState(`
+
 in Float ux
 in Float uy
 
@@ -162,13 +163,13 @@ uniform Int iTime
 
 Vec2 square_complex(Vec2 z){
 	return Vec2(
-		elem(z,0)*elem(z,0) - elem(z,1)*elem(z,1),
-		elem(z,0)*elem(z,1) + elem(z,1)*elem(z,0)
+		z.x * z.x - z.y * z.y,
+		z.x * z.y + z.y * z.x
 	)
 }
 
 Float square_length(Vec2 a) {
-	return elem(a,0)*elem(a,0) + elem(a,1)*elem(a,1)
+	return a.x * a.x + a.y * a.y
 }
 
 Vec4 main() {
