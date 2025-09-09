@@ -7,6 +7,7 @@
       "sourceMap": true,
       "allowSyntheticDefaultImports": true,
       "moduleResolution": "node",
-      "module": "ESNext"
-    }
+      "module": "ESNext",
+      "skipLibCheck": true
+    },
   }

@@ -5,6 +5,9 @@ const path = require('path');
 
 module.exports = {
   entry: "./source/bootstrap.js",
+  experiments: {
+    asyncWebAssembly: true
+  },
   output: {
     path: path.resolve(__dirname, "dist"),
     filename: "bootstrap.js",
