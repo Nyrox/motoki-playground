@@ -113,6 +113,10 @@ const App = () => {
 						setGeneratedGLSL(notification.glsl)						
 					}
 					break;
+				case "worker_initialized":
+					console.log("Worker initialized")
+					render();
+					break;
 			}
 		}
 
@@ -127,10 +131,11 @@ const App = () => {
 		
 		let canvas = canvasRef.current as HTMLCanvasElement
 		let frameCount = 0
-		let handle;
+		console.log(frameCount)
+		let handle: number;
 		handle = requestAnimationFrame(function frame() {
 			frameCount += 1;
-			(frameTimerRef.current as HTMLElement).innerText = handle
+			(frameTimerRef.current as HTMLElement).innerText = frameCount.toString()
 			gl.viewport(0, 0, canvas.width, canvas.height)
 			GL.draw(gl, glData, frameCount)
 			handle = requestAnimationFrame(frame)
@@ -203,17 +208,18 @@ Vec4 main() {
 		// setImgUri(canvas.toDataURL())
 	}
 
-
 	return <>
 		<div className="left-panel">
 			<div className="image-container">
 				<canvas ref={canvasRef} />
 				<div className="toolbar">
+					<button className="render-button" onClick={render}>Render (⌘+Enter)</button>
 					<span className="frame-timer" ref={frameTimerRef}>1</span>
 				</div>
 			</div>
 			<div className="output-container">
-				{compileOutput}
+				<h3>Compile Output</h3>
+				{compileOutput.length !== 0 ? compileOutput : (generatedGLSL != "" ? <li style={{ color: "lightgreen" }}>No errors</li> : <li>Press Render to compile</li>)}
 			</div>
 		</div>
 		{(activeTab == "frag" ?

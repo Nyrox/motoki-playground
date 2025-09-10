@@ -79,13 +79,13 @@ pub fn check_shader_compilation(shader: String) -> ShaderCompilationResult {
 }
 
 #[wasm_bindgen]
-pub fn shader_compilation_output_errors(result: ShaderCompilationResult) -> String {
+pub fn shader_compilation_output_errors(result: &ShaderCompilationResult) -> String {
     result.errors[0].clone()
 }
 
 #[wasm_bindgen]
-pub fn shader_compilation_output_glsl(result: ShaderCompilationResult) -> String {
-    result.glsl
+pub fn shader_compilation_output_glsl(result: &ShaderCompilationResult) -> String {
+    result.glsl.clone()
 }
 
 #[wasm_bindgen]

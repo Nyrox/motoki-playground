@@ -21,9 +21,11 @@ import("motokigo-wasm").then(wasm => {
                 let result = wasm.check_shader_compilation(message.shaderSource)
                 
                 let errors = [];
+                console.log(result, result.has_error)
                 if (result.has_error) {
                     errors = [wasm.shader_compilation_output_errors(result)]
                 }
+                console.log(result)
                 console.log(errors)
 
                 let response = createShaderCompilationResultNotification(errors, [], wasm.shader_compilation_output_glsl(result))
@@ -31,6 +33,8 @@ import("motokigo-wasm").then(wasm => {
             break;
         }
     })
+
+    postMessage({ notificationType: "worker_initialized" })
 })
 
 
@@ -55,6 +59,11 @@ function createShaderCompilationResultNotification(errors: string[], warnings: s
 
 export type Notification =
     | ShaderCompilationResultNotification
+    | WorkerInitializedNotification
+
+export interface WorkerInitializedNotification {
+    notificationType: "worker_initialized";
+}
 
 export interface RequestShaderCompilationMessage {
     messageType: "request_shader_compilation";

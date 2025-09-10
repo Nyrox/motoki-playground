@@ -72,3 +72,41 @@ canvas {
 .tab-bar button.active {
     border-bottom: 1px solid cyan;
 }
+
+.toolbar {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 10;
+    color: white;
+    font-family: monospace;
+
+    display: flex;
+    align-items: center;
+}
+
+.toolbar button {
+    background: none;
+    border: 1px solid white;
+    color: white;
+    padding: 4px 8px;
+    margin-left: 8px;
+    opacity: 0.8;
+    cursor: pointer;
+    margin-right: 8px;
+
+    &:hover {
+        opacity: 1.0;
+    }
+}
+
+.image-container {
+    position: relative;
+}
+
+.output-container > h3 {
+    margin-top: 0;
+    margin-bottom: 8px;
+    border-bottom: 1px solid white;
+    display: inline-block;
+}
