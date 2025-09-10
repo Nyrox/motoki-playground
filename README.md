@@ -4,6 +4,8 @@
 
 Motoki Playground is a web-based environment for experimenting with the Motoki shader programming language. It leverages `motokigo` compiled to WebAssembly (via `wasm-pack` at `/motokigo-wasm`) and compiles shaders in web worker and runs the generated GLSL in a WebGL canvas.
 
+![Screenshot](./screenshot.png)
+
 ## Project Structure
 
 - `/motokigo-wasm`: Contains the Motoki compiler wasm bindings.
