@@ -1,0 +1,41 @@
+on: 
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs: 
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+      - name: Install wasm-pack
+        run: cargo install wasm-pack
+      - name: Build with wasm-pack
+        run: wasm-pack build --target web
+        working-directory: ./motokigo-wasm
+      - name: Upload pkg folder
+        uses: actions/upload-artifact@v2
+        with:
+          name: motokigo-wasm-pkg
+          path: ./motokigo-wasm/pkg
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '19'
+      - name: Install dependencies
+        run: npm install
+      - name: Build project
+        run: npm run build
+      - name: Upload dist folder
+        uses: actions/upload-artifact@v2
+        with:
+          name: dist
+          path: ./dist
